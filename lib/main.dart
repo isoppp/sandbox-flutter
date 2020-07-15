@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sandbox_flutter/empty/empty_screen.dart';
+import 'package:sandbox_flutter/moor/moor_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -30,6 +31,7 @@ class MyHomePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
+            _navButton(context, 'moor', MoorScreen()),
             _navButton(context, 'empty', EmptyScreen()),
           ],
         ),
@@ -39,7 +41,7 @@ class MyHomePage extends StatelessWidget {
 
   Widget _navButton(BuildContext context, String title, Widget screenWidget) {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.only(top: 4, bottom: 4),
       child: FlatButton(
         color: Colors.blue,
         child: Text(title, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
