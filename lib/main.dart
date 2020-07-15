@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sandbox_flutter/empty/empty_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -13,32 +14,39 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: MyHomePage(title: 'My Flutter SandBox'),
+      home: MyHomePage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
+class MyHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text('My Flutter SandBox'),
       ),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[],
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            _navButton(context, 'empty', EmptyScreen()),
+          ],
         ),
       ), // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+
+  Widget _navButton(BuildContext context, String title, Widget screenWidget) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: FlatButton(
+        color: Colors.blue,
+        child: Text(title, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        onPressed: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => screenWidget));
+        },
+      ),
     );
   }
 }
