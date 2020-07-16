@@ -29,18 +29,47 @@ LazyDatabase _openConnection() {
   });
 }
 
-@UseMoor(tables: [Tasks])
+@UseMoor(tables: [Tasks], daos: [TaskDao])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
   int get schemaVersion => 1;
+}
+
+@UseDao(
+  tables: [Tasks],
+)
+class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
+  final AppDatabase db;
+
+  TaskDao(this.db) : super(db);
 
   // int means return autoincrement key
   Future<List<Task>> getAllTasks() => select(tasks).get();
-  Stream<List<Task>> watchAllTasks() => select(tasks).watch();
-  Future<int> insertTask(Task task) => into(tasks).insert(task);
-  Future<bool> updateTask(Task task) => update(tasks).replace(task);
-  Future<int> deleteTask(Task task) => delete(tasks).delete(task);
+  Stream<List<Task>> watchAllTasks() {
+    return (select(tasks)
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.dueDate, mode: OrderingMode.desc),
+            (t) => OrderingTerm(expression: t.name, mode: OrderingMode.asc), // asc is default
+          ]))
+        .watch();
+  }
+
+  Stream<List<Task>> watchUnCompletedTasks() {
+    return (select(tasks)
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.dueDate, mode: OrderingMode.desc),
+            (t) => OrderingTerm(expression: t.name, mode: OrderingMode.asc), // asc is default
+          ])
+          ..where(
+            (t) => t.completed.equals(false),
+          ))
+        .watch();
+  }
+
+  Future<int> insertTask(Insertable<Task> task) => into(tasks).insert(task);
+  Future<bool> updateTask(Insertable<Task> task) => update(tasks).replace(task);
+  Future<int> deleteTask(Insertable<Task> task) => delete(tasks).delete(task);
   Future<void> deleteAllTasks() => delete(tasks).go();
 }

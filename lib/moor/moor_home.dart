@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:moor/moor.dart' as moor;
 import 'package:provider/provider.dart';
 import 'package:sandbox_flutter/moor/moor_database.dart';
 
@@ -9,6 +10,7 @@ class MoorHome extends StatefulWidget {
 }
 
 class _MoorHomeState extends State<MoorHome> {
+  bool showAll = false;
   @override
   Widget build(BuildContext context) {
     final database = Provider.of<AppDatabase>(context);
@@ -18,20 +20,41 @@ class _MoorHomeState extends State<MoorHome> {
         FlatButton(
           child: Text('add'),
           onPressed: () {
-            database.insertTask(Task(name: "Test Task", dueDate: DateTime.now().add(Duration(days: 5))));
+            database.taskDao.insertTask(
+              TasksCompanion(
+                name: moor.Value("Test Task"),
+                dueDate: moor.Value(DateTime.now().add(Duration(days: 5))),
+              ),
+            );
           },
         ),
         FlatButton(
           child: Text('update latest'),
           onPressed: () async {
-            var tasks = await database.getAllTasks();
-            database.updateTask(tasks.last.copyWith(name: "edited"));
+            var tasks = await database.taskDao.getAllTasks();
+            database.taskDao.updateTask(tasks.last.copyWith(name: "edited"));
           },
         ),
         FlatButton(
           child: Text('delete all tasks'),
           onPressed: () {
-            database.deleteAllTasks();
+            database.taskDao.deleteAllTasks();
+          },
+        ),
+        FlatButton(
+          child: Text('show not completed'),
+          onPressed: () {
+            setState(() {
+              showAll = false;
+            });
+          },
+        ),
+        FlatButton(
+          child: Text('show all'),
+          onPressed: () {
+            setState(() {
+              showAll = true;
+            });
           },
         ),
         SizedBox(height: 16),
@@ -41,8 +64,9 @@ class _MoorHomeState extends State<MoorHome> {
   }
 
   StreamBuilder<List<Task>> _buildTaskList(BuildContext context, AppDatabase database) {
+    final stream = showAll ? database.taskDao.watchAllTasks() : database.taskDao.watchUnCompletedTasks();
     return StreamBuilder(
-      stream: database.watchAllTasks(),
+      stream: stream,
       builder: (context, AsyncSnapshot<List<Task>> snapshot) {
         final tasks = snapshot.data ?? [];
 
@@ -65,7 +89,7 @@ class _MoorHomeState extends State<MoorHome> {
           caption: 'Delete',
           color: Colors.red,
           icon: Icons.delete,
-          onTap: () => database.deleteTask(itemTask),
+          onTap: () => database.taskDao.deleteTask(itemTask),
         )
       ],
       child: CheckboxListTile(
@@ -73,7 +97,7 @@ class _MoorHomeState extends State<MoorHome> {
           subtitle: Text(itemTask.dueDate?.toString() ?? 'No date'),
           value: itemTask.completed,
           onChanged: (newValue) {
-            database.updateTask(itemTask.copyWith(completed: newValue));
+            database.taskDao.updateTask(itemTask.copyWith(completed: newValue));
           }),
     );
   }
