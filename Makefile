@@ -18,5 +18,5 @@ brb:
 brbc:
 	flutter packages pub run build_runner build --delete-conflicting-outputs
 brw:
-	flutter packages pub run build_runner build --watch
+	flutter packages pub run build_runner watch
 
