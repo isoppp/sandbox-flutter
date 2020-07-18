@@ -38,7 +38,17 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onUpgrade: (migrator, from, to) async {
+          if (from == 1) {
+            await migrator.addColumn(tasks, tasks.tagName);
+            await migrator.createTable(tags);
+          }
+        },
+      );
 }
 
 @UseDao(tables: [Tasks])

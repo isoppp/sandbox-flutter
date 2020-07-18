@@ -241,11 +241,8 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
   @override
   GeneratedTextColumn get tagName => _tagName ??= _constructTagName();
   GeneratedTextColumn _constructTagName() {
-    return GeneratedTextColumn(
-      'tag_name',
-      $tableName,
-      true,
-    );
+    return GeneratedTextColumn('tag_name', $tableName, true,
+        $customConstraints: 'NULL REFERENCES tags(name)');
   }
 
   final VerificationMeta _nameMeta = const VerificationMeta('name');
