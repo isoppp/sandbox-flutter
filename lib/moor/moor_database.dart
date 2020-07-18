@@ -25,6 +25,16 @@ class Tags extends Table {
   Set<Column> get primaryKey => {name};
 }
 
+class TaskWithTag {
+  final Task task;
+  final Tag tag;
+
+  TaskWithTag({
+    @required this.task,
+    @required this.tag,
+  });
+}
+
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
@@ -54,33 +64,62 @@ class AppDatabase extends _$AppDatabase {
       );
 }
 
-@UseDao(tables: [Tasks])
+@UseDao(tables: [Tasks, Tags])
 class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
   final AppDatabase db;
 
   TaskDao(this.db) : super(db);
 
-  // int means return autoincrement key
   Future<List<Task>> getAllTasks() => select(tasks).get();
-  Stream<List<Task>> watchAllTasks() {
+  Stream<List<TaskWithTag>> watchAllTasksWithTag() {
     return (select(tasks)
-          ..orderBy([
-            (t) => OrderingTerm(expression: t.dueDate, mode: OrderingMode.desc),
-            (t) => OrderingTerm(expression: t.name, mode: OrderingMode.asc), // asc is default
-          ]))
-        .watch();
+          ..orderBy(
+            [
+              (t) => OrderingTerm(expression: t.dueDate, mode: OrderingMode.desc),
+              (t) => OrderingTerm(expression: t.name, mode: OrderingMode.asc), // asc is default
+            ],
+          ))
+        .join(
+          [
+            leftOuterJoin(tags, tags.name.equalsExp(tasks.tagName)),
+          ],
+        )
+        .watch()
+        .map((rows) {
+          return rows.map((row) {
+            return TaskWithTag(
+              task: row.readTable(tasks),
+              tag: row.readTable(tags),
+            );
+          }).toList();
+        });
   }
 
-  Stream<List<Task>> watchUnCompletedTasks() {
+  Stream<List<TaskWithTag>> watchUnCompletedTasksWithTag() {
     return (select(tasks)
-          ..orderBy([
-            (t) => OrderingTerm(expression: t.dueDate, mode: OrderingMode.desc),
-            (t) => OrderingTerm(expression: t.name, mode: OrderingMode.asc), // asc is default
-          ])
+          ..orderBy(
+            [
+              (t) => OrderingTerm(expression: t.dueDate, mode: OrderingMode.desc),
+              (t) => OrderingTerm(expression: t.name, mode: OrderingMode.asc), // asc is default
+            ],
+          )
           ..where(
             (t) => t.completed.equals(false),
           ))
-        .watch();
+        .join(
+          [
+            leftOuterJoin(tags, tags.name.equalsExp(tasks.tagName)),
+          ],
+        )
+        .watch()
+        .map((rows) {
+          return rows.map((row) {
+            return TaskWithTag(
+              task: row.readTable(tasks),
+              tag: row.readTable(tags),
+            );
+          }).toList();
+        });
   }
 
   Future<int> insertTask(Insertable<Task> task) => into(tasks).insert(task);

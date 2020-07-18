@@ -538,6 +538,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
 
 mixin _$TaskDaoMixin on DatabaseAccessor<AppDatabase> {
   $TasksTable get tasks => attachedDatabase.tasks;
+  $TagsTable get tags => attachedDatabase.tags;
 }
 mixin _$TagDaoMixin on DatabaseAccessor<AppDatabase> {
   $TagsTable get tags => attachedDatabase.tags;
