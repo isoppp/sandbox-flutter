@@ -63,11 +63,11 @@ class _MoorHomeState extends State<MoorHome> {
     );
   }
 
-  StreamBuilder<List<Task>> _buildTaskList(BuildContext context, AppDatabase database) {
-    final stream = showAll ? database.taskDao.watchAllTasks() : database.taskDao.watchUnCompletedTasks();
+  StreamBuilder<List<TaskWithTag>> _buildTaskList(BuildContext context, AppDatabase database) {
+    final stream = showAll ? database.taskDao.watchAllTasksWithTag() : database.taskDao.watchUnCompletedTasksWithTag();
     return StreamBuilder(
       stream: stream,
-      builder: (context, AsyncSnapshot<List<Task>> snapshot) {
+      builder: (context, AsyncSnapshot<List<TaskWithTag>> snapshot) {
         final tasks = snapshot.data ?? [];
 
         return ListView.builder(
@@ -81,7 +81,7 @@ class _MoorHomeState extends State<MoorHome> {
     );
   }
 
-  Widget _buildListItem(Task itemTask, AppDatabase database) {
+  Widget _buildListItem(TaskWithTag itemTask, AppDatabase database) {
     return Slidable(
       actionPane: SlidableDrawerActionPane(),
       secondaryActions: <Widget>[
@@ -89,16 +89,17 @@ class _MoorHomeState extends State<MoorHome> {
           caption: 'Delete',
           color: Colors.red,
           icon: Icons.delete,
-          onTap: () => database.taskDao.deleteTask(itemTask),
+          onTap: () => database.taskDao.deleteTask(itemTask.task),
         )
       ],
       child: CheckboxListTile(
-          title: Text(itemTask.name),
-          subtitle: Text(itemTask.dueDate?.toString() ?? 'No date'),
-          value: itemTask.completed,
-          onChanged: (newValue) {
-            database.taskDao.updateTask(itemTask.copyWith(completed: newValue));
-          }),
+        title: Text(itemTask.task.name + ' ' + (itemTask?.tag?.name ?? 'null')),
+        subtitle: Text(itemTask.task.dueDate?.toString() ?? 'No date'),
+        value: itemTask.task.completed,
+        onChanged: (newValue) {
+          database.taskDao.updateTask(itemTask.task.copyWith(completed: newValue));
+        },
+      ),
     );
   }
 }
