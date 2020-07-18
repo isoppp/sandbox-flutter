@@ -48,6 +48,9 @@ class AppDatabase extends _$AppDatabase {
             await migrator.createTable(tags);
           }
         },
+        beforeOpen: (details) async {
+          await customStatement('PRAGMA foreign_keys = ON');
+        },
       );
 }
 
