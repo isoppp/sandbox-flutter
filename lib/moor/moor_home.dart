@@ -11,6 +11,7 @@ class MoorHome extends StatefulWidget {
 
 class _MoorHomeState extends State<MoorHome> {
   bool showAll = false;
+  Tag selectedTag;
   @override
   Widget build(BuildContext context) {
     final database = Provider.of<AppDatabase>(context);
@@ -18,12 +19,24 @@ class _MoorHomeState extends State<MoorHome> {
     return Column(
       children: <Widget>[
         FlatButton(
-          child: Text('add'),
+          child: Text('add task'),
           onPressed: () {
             database.taskDao.insertTask(
               TasksCompanion(
                 name: moor.Value("Test Task"),
                 dueDate: moor.Value(DateTime.now().add(Duration(days: 5))),
+                tagName: moor.Value(selectedTag.name),
+              ),
+            );
+          },
+        ),
+        FlatButton(
+          child: Text('add tag'),
+          onPressed: () {
+            database.tagDao.insertTag(
+              TagsCompanion(
+                name: moor.Value('tag/${DateTime.now().second}'),
+                color: moor.Value(0xFFFF00FF),
               ),
             );
           },
@@ -59,6 +72,7 @@ class _MoorHomeState extends State<MoorHome> {
         ),
         SizedBox(height: 16),
         Expanded(child: _buildTaskList(context, database)),
+        Expanded(child: _buildTagList(context, database)),
       ],
     );
   }
@@ -74,14 +88,14 @@ class _MoorHomeState extends State<MoorHome> {
           itemCount: tasks.length,
           itemBuilder: (_, index) {
             final itemTask = tasks[index];
-            return _buildListItem(itemTask, database);
+            return _buildTaskItem(itemTask, database);
           },
         );
       },
     );
   }
 
-  Widget _buildListItem(TaskWithTag itemTask, AppDatabase database) {
+  Widget _buildTaskItem(TaskWithTag itemTask, AppDatabase database) {
     return Slidable(
       actionPane: SlidableDrawerActionPane(),
       secondaryActions: <Widget>[
@@ -100,6 +114,32 @@ class _MoorHomeState extends State<MoorHome> {
           database.taskDao.updateTask(itemTask.task.copyWith(completed: newValue));
         },
       ),
+    );
+  }
+
+  StreamBuilder<List<Tag>> _buildTagList(BuildContext context, AppDatabase database) {
+    final stream = database.tagDao.watchTags();
+    return StreamBuilder(
+      stream: stream,
+      builder: (context, AsyncSnapshot<List<Tag>> snapshot) {
+        final tags = snapshot.data ?? [];
+
+        return ListView.builder(
+          itemCount: tags.length,
+          itemBuilder: (_, index) {
+            final tag = tags[index];
+            return FlatButton(
+              child: Text(tag.name),
+              color: Color(tag.color),
+              onPressed: () {
+                setState(() {
+                  selectedTag = tag;
+                });
+              },
+            );
+          },
+        );
+      },
     );
   }
 }
