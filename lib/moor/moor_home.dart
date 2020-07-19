@@ -16,7 +16,7 @@ class _MoorHomeState extends State<MoorHome> {
   Widget build(BuildContext context) {
     final database = Provider.of<AppDatabase>(context);
 
-    return Column(
+    return ListView(
       children: <Widget>[
         FlatButton(
           child: Text('add task'),
@@ -71,8 +71,9 @@ class _MoorHomeState extends State<MoorHome> {
           },
         ),
         SizedBox(height: 16),
-        Expanded(child: _buildTaskList(context, database)),
-        Expanded(child: _buildTagList(context, database)),
+        _buildTaskList(context, database),
+        SizedBox(height: 16),
+        _buildTagList(context, database)
       ],
     );
   }
@@ -84,13 +85,20 @@ class _MoorHomeState extends State<MoorHome> {
       builder: (context, AsyncSnapshot<List<TaskWithTag>> snapshot) {
         final tasks = snapshot.data ?? [];
 
-        return ListView.builder(
-          itemCount: tasks.length,
-          itemBuilder: (_, index) {
-            final itemTask = tasks[index];
-            return _buildTaskItem(itemTask, database);
-          },
-        );
+        return SingleChildScrollView(
+            child: Column(
+          children: <Widget>[
+            ListView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: tasks.length,
+              itemBuilder: (_, index) {
+                final itemTask = tasks[index];
+                return _buildTaskItem(itemTask, database);
+              },
+            ),
+          ],
+        ));
       },
     );
   }
@@ -124,21 +132,28 @@ class _MoorHomeState extends State<MoorHome> {
       builder: (context, AsyncSnapshot<List<Tag>> snapshot) {
         final tags = snapshot.data ?? [];
 
-        return ListView.builder(
-          itemCount: tags.length,
-          itemBuilder: (_, index) {
-            final tag = tags[index];
-            return FlatButton(
-              child: Text(tag.name),
-              color: Color(tag.color),
-              onPressed: () {
-                setState(() {
-                  selectedTag = tag;
-                });
+        return SingleChildScrollView(
+            child: Column(
+          children: <Widget>[
+            ListView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: tags.length,
+              itemBuilder: (_, index) {
+                final tag = tags[index];
+                return FlatButton(
+                  child: Text(tag.name),
+                  color: Color(tag.color),
+                  onPressed: () {
+                    setState(() {
+                      selectedTag = tag;
+                    });
+                  },
+                );
               },
-            );
-          },
-        );
+            ),
+          ],
+        ));
       },
     );
   }
